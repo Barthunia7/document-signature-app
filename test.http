@@ -1,0 +1,37 @@
+### 1. Register a Fresh Test User Account
+POST http://localhost:5000/api/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Kiran Saini",
+  "email": "testupload@gmail.com",
+  "password": "Desktop@7852"
+}
+
+###
+
+### 2. Login to Generate Your Auth Token
+# @name login
+POST http://localhost:5000/api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "testupload@gmail.com",
+  "password": "Desktop@7852"
+}
+
+###
+
+### 3. Protected Day 3 PDF Document Upload Route
+@token = {{login.response.body.token}}
+
+POST http://localhost:5000/api/docs/upload HTTP/1.1
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundaryMarker
+
+--boundaryMarker
+Content-Disposition: form-data; name="document"; filename="test.pdf"
+Content-Type: application/pdf
+
+< ./ID_CARD.pdf >
+--boundaryMarker--

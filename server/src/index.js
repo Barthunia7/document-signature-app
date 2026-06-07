@@ -12,7 +12,15 @@ app.use(express.json());
 
 // Import & Mount Routes
 const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);// Import the routes (adjusting the path to point to your routes folder)
+
+const documentRoutes = require('./routes/documentRoutes');
+
+// Mount the routes onto your active express application instance
+app.use('/api/docs', documentRoutes);
+
+
+
 
 // Test Route
 app.get('/test', (req, res) => {
