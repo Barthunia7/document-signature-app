@@ -23,7 +23,7 @@ app.use('/api/docs', documentRoutes);
 const router = express.Router();
 
 const signatureRoutes = require('./routes/signatureRoutes'); 
-app.use('/api', signatureRoutes); 
+app.use('/api/signatures', signatureRoutes); 
 
 
 // Test Route

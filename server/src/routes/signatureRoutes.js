@@ -4,7 +4,7 @@ const router = express.Router();
 const Signature = require('../models/Signature');
 
 // Route to save or update signature positions (x, y)
-router.post('/signatures', async (req, res) => {
+router.post('/', async (req, res) => {
   const { fieldId, coordinates, signer, status } = req.body;
 
   if (!fieldId || !coordinates || !signer) {
