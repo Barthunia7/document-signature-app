@@ -20,7 +20,7 @@ const documentRoutes = require('./routes/documentRoutes');
 // Mount the routes onto your active express application instance
 app.use('/api/docs', documentRoutes);
 
-const router = express.Router();
+//const router = express.Router();
 
 const signatureRoutes = require('./routes/signatureRoutes'); 
 app.use('/api/signatures', signatureRoutes); 
