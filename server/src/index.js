@@ -9,39 +9,44 @@ const path = require('path');
 // Initialize Express app
 const app = express();
 
-// Apply Global Middleware Cross-Origin Rules
+// =========================================================
+// 🌐 GLOBAL MIDDLEWARE & SECURITY CONFIGURATIONS (MUST BE FIRST)
+// =========================================================
 app.use(cors({
-  origin: 'http://localhost:5173', // Your Vite frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: 'http://localhost:5173', // Vite frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
-app.use(express.json({ limit: '10mb' })); // Increased limit to handle large base64 signature images safely
+app.use(express.json({ limit: '10mb' })); // Handle large signature strings safely
 
-// Log incoming request headers and endpoints for clear developer visibility
+// Log incoming requests for developer visibility
 app.use((req, res, next) => {
   console.log(`📡 Incoming Request Event: [${req.method}] to path: ${req.url}`);
   next();
 });
 
 // =========================================================
-// 🚀 DAY 10 AUDIT LOG INTEGRATION BLOCK
+// 🚀 MOUNT SYSTEM ROUTERS (LOADED SAFELY AFTER CORS)
 // =========================================================
+// Day 11 Status Router
+const statusRouter = require('./routes/statusRouter');
+app.use(statusRouter); 
+
+// Day 10 Audit Log Middleware & Routes
 const { auditRouter, logAuditTrailMiddleware } = require('./routes/auditRouter');
-
-// Attach the middleware globally to monitor signing routes automatically
 app.use(logAuditTrailMiddleware);
-
-// Mount the Day 10 Audit tracking routes
 app.use(auditRouter);
-// =========================================================
 
-// Import and mount core transaction routers
+// Core Transaction Routers
 const emailRouter = require('./routes/emailRouter');
 app.use(emailRouter);
 
 const pdfRouter = require('./routes/pdfRouter');
 app.use(pdfRouter);
 
+// =========================================================
+// 📦 EXTERNAL INTEGRATIONS & FEATURE ROUTES
+// =========================================================
 // Test Supabase Connection on startup
 const supabase = require('./config/supabase');
 async function testSupabase() {
@@ -56,7 +61,6 @@ testSupabase();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Import & Mount Feature Routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 

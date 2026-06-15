@@ -6,7 +6,7 @@ export default function SendRequestForm() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  const handleSendRequest = async (e) => {
+    const handleSendRequest = async (e) => {
     e.preventDefault();
     if (!email) return;
 
@@ -14,6 +14,7 @@ export default function SendRequestForm() {
     setResult(null);
 
     try {
+      // 1. Existing Day 9 Pipeline: Generate Token and Dispatch Nodemailer Mail
       const response = await fetch('http://localhost:5000/api/request-signature', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,17 +22,25 @@ export default function SendRequestForm() {
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to dispatch request');
 
-      if (!response.ok) throw new Error(data.error || 'Failed to dispatch signature request');
+      // ✅ 2. Day 11 State Synchronization: Initialize status to "Pending" inside MongoDB permanently
+      await fetch('http://localhost:5000/api/status/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          documentId: 'doc_kiran_training_2026', 
+          signerEmail: email 
+        }),
+      });
 
       setResult({
-        message: data.message,
+        message: "Signature request link dispatched and marked as 'Pending' in database!",
         link: data.publicSignatureLink,
-        preview: data.testPreviewUrl, // Ethereal email simulator console preview URL
       });
       setEmail('');
     } catch (err) {
-      alert(`Error dispatching tokenized request: ${err.message}`);
+      alert(`Error initializing request: ${err.message}`);
     } finally {
       setLoading(false);
     }
