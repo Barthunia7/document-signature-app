@@ -1,30 +1,33 @@
-// routes/signatures.js
 const express = require('express');
 const router = express.Router();
-const Signature = require('../models/Signature');
+const { generateSignedPDF } = require('../services/pdfService');
 
-// Route to save or update signature positions (x, y)
 router.post('/', async (req, res) => {
-  const { fieldId, coordinates, signer, status } = req.body;
-
-  if (!fieldId || !coordinates || !signer) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
   try {
-    // Upsert mechanism: Updates if fieldId exists, creates if it doesn't
-    const updatedSignature = await Signature.findOneAndUpdate(
-      { fieldId },
-      { coordinates, signer, status },
-      { new: true, upsert: true }
-    );
+    const { fieldId, coordinates, signer, status, signatureImage } = req.body;
 
-    res.status(200).json({ 
+    if (!fieldId || !coordinates || !signer) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const templateName = 'ID_CARD.pdf'; 
+    let signedFilePath = null;
+
+    if (signatureImage) {
+      signedFilePath = await generateSignedPDF(
+        templateName, 
+        signatureImage, 
+        coordinates
+      );
+    }
+
+    return res.status(200).json({ 
       success: true, 
-      data: updatedSignature 
+      filePath: signedFilePath 
     });
   } catch (error) {
-    res.status(500).json({ 
+    console.error("❌ Route Error:", error.message);
+    return res.status(500).json({ 
       success: false, 
       error: error.message 
     });

@@ -21,6 +21,11 @@ const SignatureSchema = new mongoose.Schema({
     type: String, 
     enum: ['pending', 'signed'], 
     default: 'pending' 
+  },
+  // Day 8 Addition: Stores the Supabase public download URL
+  pdfUrl: {
+    type: String,
+    default: null
   }
 }, { timestamps: true });
 
