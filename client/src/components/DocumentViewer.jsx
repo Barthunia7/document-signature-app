@@ -26,13 +26,18 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, onReset }) 
     try {
       const response = await fetch('http://localhost:5000/api/sign-pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // ✅ Day 10 Custom Logging Headers Injected Securely
+          'X-Document-Id': 'doc_kiran_training_2026', 
+          'X-Signer-Email': 'sainikiran7852@gmail.com'
+        },
         body: JSON.stringify({
           signatureImage: signatureSrc,
           xPosition: coords.x,
           yPosition: coords.y,
           customPdf: customPdfSrc,
-          targetPageNumber: parseInt(pageNumber, 10) || 1 // ✅ Pass selected page number
+          targetPageNumber: parseInt(pageNumber, 10) || 1 
         })
       });
 
@@ -61,7 +66,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, onReset }) 
           ← Redraw Signature
         </button>
 
-        {/* ✅ Dynamic Page Selector Configuration Box */}
+        {/* Dynamic Page Selector Configuration Box */}
         <div style={styles.pageSelectorWrapper}>
           <label style={styles.selectorLabel}>Target Page:</label>
           <input 
