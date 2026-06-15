@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SignaturePad from './SignaturePad';
 import DocumentViewer from './DocumentViewer';
+import SendRequestForm from './SendRequestForm'; // ✅ Day 9 Request Form Imported
 
 export default function SignatureDashboard() {
   const [signatureImage, setSignatureImage] = useState(null);
@@ -50,9 +51,12 @@ export default function SignatureDashboard() {
 
   return (
     <div style={styles.dashboardWrapper}>
-      <h2 style={styles.dashboardTitle}>Day 8 Document Signing Portal</h2>
+      <h2 style={styles.dashboardTitle}>Day 9 Document Signing Portal</h2>
       
-      {/* STEP A: Always let them choose the custom local target PDF first */}
+      {/* ✅ STEP A: Render Day 9 Tokenized Mailer Form Controller Top Layer */}
+      {!signatureImage && <SendRequestForm />}
+
+      {/* STEP B: Choose the custom local target PDF */}
       <div style={styles.pdfUploadBanner}>
         <p style={{ margin: 0, fontWeight: 'bold', color: '#475569' }}>
           {pdfFileBase64 ? `📄 Active Target Document: ${pdfName}` : "📁 Step 1: Upload a PDF from your computer to sign (Optional)"}
@@ -94,10 +98,10 @@ export default function SignatureDashboard() {
           )}
         </div>
       ) : (
-        /* Step B: Pass the custom PDF along with signature down to viewer workspace */
+        /* Step C: Pass custom PDF along with signature down to viewer workspace */
         <DocumentViewer 
           signatureSrc={signatureImage} 
-          customPdfSrc={pdfFileBase64} // Passed cleanly into existing layout mechanics
+          customPdfSrc={pdfFileBase64} 
           onReset={() => {
             setSignatureImage(null);
             setActiveTab('draw');
@@ -108,7 +112,6 @@ export default function SignatureDashboard() {
   );
 }
 
-// Reuse your styles, adding the new banner configuration:
 const styles = {
   dashboardWrapper: { padding: '30px', fontFamily: 'sans-serif', maxWidth: '1000px', margin: '0 auto' },
   dashboardTitle: { textAlign: 'center', marginBottom: '20px', color: '#212529', fontWeight: 'bold' },
