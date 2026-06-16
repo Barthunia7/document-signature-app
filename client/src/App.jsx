@@ -1,33 +1,23 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-// 1. Import new combined signature dashboard component
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignatureDashboard from './components/SignatureDashboard';
+import Login from './components/Login';       // 👈 Ensure these component names match Auth files
+import Register from './components/Register'; // 👈 Ensure these component names match Auth files
 
-// Import other existing page components
-import Login from './components/login';
-import Dashboard from './components/SignatureDashboard';
-
-function App() {
+export default function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          {/*  existing application routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+    <BrowserRouter>
+      <Routes>
+        {/* Main Dashboard Portal Gateway Entry */}
+        <Route path="/" element={<SignatureDashboard />} />
 
-          {/* 2. Add the dedicated Day 8 production route */}
-          <Route path="/sign-document" element={<SignatureDashboard />} />
-          {/* Public signature route */}
-          <Route path="/public-sign/:token" element={<SignatureDashboard />} />
+        {/* ✅ FIXES THE BLANK SCREEN: Mounts Day 6 registration and login routes */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
 
-          {/* Default fallback route pointing straight to new portal */}
-          <Route path="/" element={<SignatureDashboard />} />
-        </Routes>
-      </div>
-    </Router>
+        {/* Fallback Catch-All Safety Route Redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

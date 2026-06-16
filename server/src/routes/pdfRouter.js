@@ -12,39 +12,50 @@ router.post('/api/sign-pdf', async (req, res) => {
       return res.status(400).json({ error: 'Missing signature image payload data' });
     }
 
-    let pdfDoc;
+        let pdfDoc;
 
-    // --- COMPREHENSIVE MULTI-SOURCE DOCUMENT PARSER ---
-    if (customPdf && customPdf.startsWith('data:application/pdf;base64,')) {
+    // --- DISTINCT MULTI-DOCUMENT ARCHITECTURE ---
+    if (customPdf && typeof customPdf === 'string' && customPdf.startsWith('data:application/pdf;base64,') && customPdf.length > 500) {
+      // Dynamic user upload channel (such as training letter file)
       const pdfBase64Data = customPdf.replace(/^data:application\/pdf;base64,/, "");
       const pdfBuffer = Buffer.from(pdfBase64Data, 'base64');
       pdfDoc = await PDFDocument.load(pdfBuffer);
     } else {
-      const assetsDir = path.join(__dirname, '../assets');
-      const templatePath = path.join(assetsDir, 'template.pdf');
+      // Create a fresh canvas to inject custom programmatic layouts based on the active card ID
+      pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage(); 
+      
+      // Outer layout border box
+      page.drawRectangle({ x: 20, y: 20, width: 572, height: 752, borderColor: rgb(0.8, 0.8, 0.8), borderWidth: 1 });
 
-      if (fs.existsSync(templatePath)) {
-        const existingPdfBytes = fs.readFileSync(templatePath);
-        pdfDoc = await PDFDocument.load(existingPdfBytes);
-      } else {
-        pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage(); 
-        page.drawRectangle({ x: 20, y: 20, width: 572, height: 752, borderColor: rgb(0.8, 0.8, 0.8), borderWidth: 1 });
+      const currentDocId = req.headers['x-document-id'] || req.body.documentId || '';
+
+      if (currentDocId === 'doc_102') {
+        // Unique Layout 1: NDA Contract
         page.drawText('MUTUAL NON-DISCLOSURE AGREEMENT', { x: 50, y: 700, size: 18, color: rgb(0.1, 0.1, 0.1) });
-        page.drawText('This structural document governs the security requirements for software architectures...', { x: 50, y: 660, size: 11, color: rgb(0.3, 0.3, 0.3) });
+        page.drawText('This layout governs structural safety protocols for source code keys...', { x: 50, y: 660, size: 11, color: rgb(0.3, 0.3, 0.3) });
+        page.drawText('NDA Recipient Signature Area:', { x: 50, y: 310, size: 12, color: rgb(0.2, 0.2, 0.2) });
+
+      } else if (currentDocId === 'doc_103') {
+        // Unique Layout 2: Rental Lease
+        page.drawText('COMMERCIAL OFFICE RENTAL LEASE', { x: 50, y: 700, size: 18, color: rgb(0.1, 0.2, 0.4) });
+        page.drawText('This structural contract validates office tenancy conditions and rent rates...', { x: 50, y: 660, size: 11, color: rgb(0.3, 0.3, 0.3) });
+        page.drawText('Tenant Agreement Signature Area:', { x: 50, y: 310, size: 12, color: rgb(0.2, 0.2, 0.2) });
+
+      } else {
+        // Unique Layout 3: Standard Training Letter fallback
+        page.drawText('SUMMER TRAINING AUTHENTICATION LETTER', { x: 50, y: 700, size: 18, color: rgb(0.1, 0.5, 0.2) });
+        page.drawText('This serves as documentation for verified software engineering internships...', { x: 50, y: 660, size: 11, color: rgb(0.3, 0.3, 0.3) });
         page.drawText('Authorized Signature Placement Area:', { x: 50, y: 310, size: 12, color: rgb(0.2, 0.2, 0.2) });
       }
     }
 
-    // Capture pages array reference
+       // Capture pages array reference safely
     const pages = pdfDoc.getPages();
     const totalPagesCount = pages.length;
 
-    // ✅ INPUT PAGE INDEX SAFETY VALIDATOR:
-    // Convert 1-based human indexing (e.g. Page 7) to 0-based computer indexing (e.g. index 6)
+    // Convert human 1-base to index 0 element offsets
     let pageIndex = (parseInt(targetPageNumber, 10) || 1) - 1;
-
-    // Boundary containment fallback: ensure pageIndex stays within actual constraints
     if (pageIndex < 0) pageIndex = 0;
     if (pageIndex >= totalPagesCount) pageIndex = totalPagesCount - 1;
 
@@ -52,13 +63,17 @@ router.post('/api/sign-pdf', async (req, res) => {
     const targetPage = pages[pageIndex]; 
     const { width: pdfPageWidth, height: pdfPageHeight } = targetPage.getSize();
 
-    // Mapping browser pixel configurations onto physical target coordinates
+    // ✅ FIX: Standardize scaling parameters using the layout width metrics (600px workspace)
     const scaleX = pdfPageWidth / 600;
+
+    // Force explicit aspect ratios based on the target page width to prevent compression
     const absoluteSignatureWidth = 150 * scaleX;
     const absoluteSignatureHeight = 50 * scaleX; 
 
+    // ✅ FIXED MATH: Scale the Y drag position cleanly relative to the actual active page height bounds
     const finalX = parseFloat(xPosition) * scaleX;
     const finalY = pdfPageHeight - (parseFloat(yPosition) * scaleX) - absoluteSignatureHeight;
+
 
     // --- EXECUTE SIGNING STAMP GENERATION ---
     if (signatureImage.includes('image/svg+xml')) {

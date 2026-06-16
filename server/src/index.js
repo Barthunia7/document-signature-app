@@ -70,18 +70,22 @@ app.use('/api/docs', documentRoutes);
 const signatureRoutes = require('./routes/signatureRoutes'); 
 app.use('/api/signatures', signatureRoutes); 
 
-// Fallback Documents Tracker Mock Endpoint
-app.get('/api/documents', async (req, res) => {
+// ✅ DAY 12 ALIGNMENT: Expose /api/docs endpoint matching frontend fetch exactly
+app.get('/api/docs', async (req, res) => {
     try {
         const mockDocuments = [
-            { id: "1", name: "Sample_Contract.pdf", url: "https://localhost:5000/test.pdf" },
-            { id: "2", name: "Rental_Agreement.pdf", url: "https://localhost:5000/test.pdf" }
+            { id: "doc_kiran_training_2026", name: "Kiran Saini Summer Training Letter.pdf", type: "Letter" },
+            { id: "doc_102", name: "Mutual Non-Disclosure Agreement.pdf", type: "Contract" },
+            { id: "doc_103", name: "Commercial Office Rental Lease.pdf", type: "Agreement" }
         ];
-        res.json(mockDocuments);
+        
+        // Send the complete array back to the frontend dashboard console
+        return res.json(mockDocuments);
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch documents" });
+        return res.status(500).json({ error: "Failed to fetch document templates registry" });
     }
 });
+
 
 // Core Diagnostic Test Routes
 app.get('/test', (req, res) => {
