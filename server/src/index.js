@@ -10,7 +10,7 @@ const path = require('path');
 const app = express();
 
 // =========================================================
-// 🌐 GLOBAL MIDDLEWARE & SECURITY CONFIGURATIONS (MUST BE FIRST)
+// 🌐 GLOBAL MIDDLEWARE & SECURITY CONFIGURATIONS
 // =========================================================
 app.use(cors({
   origin: 'http://localhost:5173', // Vite frontend URL
@@ -25,78 +25,71 @@ app.use((req, res, next) => {
   next();
 });
 
-// =========================================================
-// 🚀 MOUNT SYSTEM ROUTERS (LOADED SAFELY AFTER CORS)
-// =========================================================
-// Day 11 Status Router
-const statusRouter = require('./routes/statusRouter');
-app.use(statusRouter); 
-
-// Day 10 Audit Log Middleware & Routes
-const { auditRouter, logAuditTrailMiddleware } = require('./routes/auditRouter');
-app.use(logAuditTrailMiddleware);
-app.use(auditRouter);
-
-// Core Transaction Routers
-const emailRouter = require('./routes/emailRouter');
-app.use(emailRouter);
-
-const pdfRouter = require('./routes/pdfRouter');
-app.use(pdfRouter);
+// Serve static assets safely
+app.use(express.static(path.join(__dirname, 'public')));
 
 // =========================================================
-// 📦 EXTERNAL INTEGRATIONS & FEATURE ROUTES
+// 📦 EXTERNAL INTEGRATIONS (Supabase Startup Check)
 // =========================================================
-// Test Supabase Connection on startup
 const supabase = require('./config/supabase');
 async function testSupabase() {
-  const { data, error } = await supabase.storage.listBuckets();
-  if (error) {
-    console.error('❌ Supabase Storage connection failed:', error.message);
-  } else {
+  try {
+    const { data, error } = await supabase.storage.listBuckets();
+    if (error) throw error;
     console.log('✅ Supabase Storage initialized successfully!');
+  } catch (error) {
+    console.error('❌ Supabase Storage connection failed:', error.message);
   }
 }
 testSupabase();
 
-app.use(express.static(path.join(__dirname, 'public')));
+// =========================================================
+// 🚀 MOUNT SYSTEM ROUTERS (Ordered by responsibility)
+// =========================================================
 
+// Global Diagnostics & Health Checks
+app.get('/test', (req, res) => res.json({ message: "Server is up and running smoothly!" }));
+app.get('/', (req, res) => res.send('Backend Working'));
+
+// Day 11 Status Router
+const statusRouter = require('./routes/statusRouter');
+app.use(statusRouter); 
+
+// Day 10 Audit Log Middleware & Routes 
+const { auditRouter, logAuditTrailMiddleware } = require('./routes/auditRouter');
+app.use(auditRouter);
+// Note: Apply logAuditTrailMiddleware inside specific routers or below this line 
+// to prevent it from intercepting standard health checks if needed.
+app.use(logAuditTrailMiddleware);
+
+// Core Transaction Routers
+const emailRouter = require('./routes/emailRouter');
+const pdfRouter = require('./routes/pdfRouter');
+app.use(emailRouter);
+app.use(pdfRouter);
+
+// Authentication & Core Domain API Routes
 const authRoutes = require('./routes/authRoutes');
+const signatureRoutes = require('./routes/signatureRoutes'); 
 app.use('/api/auth', authRoutes);
+app.use('/api/signatures', signatureRoutes); 
 
+// Document Routes Management 
+// (Ensure your local mock data route logic matches or resides cleanly inside documentRoutes.js)
 const documentRoutes = require('./routes/documentRoutes');
 app.use('/api/docs', documentRoutes);
 
-const signatureRoutes = require('./routes/signatureRoutes'); 
-app.use('/api/signatures', signatureRoutes); 
-
-// ✅ DAY 12 ALIGNMENT: Expose /api/docs endpoint matching frontend fetch exactly
-app.get('/api/docs', async (req, res) => {
-    try {
-        const mockDocuments = [
-            { id: "doc_kiran_training_2026", name: "Kiran Saini Summer Training Letter.pdf", type: "Letter" },
-            { id: "doc_102", name: "Mutual Non-Disclosure Agreement.pdf", type: "Contract" },
-            { id: "doc_103", name: "Commercial Office Rental Lease.pdf", type: "Agreement" }
-        ];
-        
-        // Send the complete array back to the frontend dashboard console
-        return res.json(mockDocuments);
-    } catch (error) {
-        return res.status(500).json({ error: "Failed to fetch document templates registry" });
-    }
+// =========================================================
+// 🛡️ GLOBAL ERROR HANDLING MIDDLEWARE (MUST BE LAST)
+// =========================================================
+app.use((err, req, res, next) => {
+  console.error('❌ Unhandled Server Error:', err.stack);
+  res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-
-// Core Diagnostic Test Routes
-app.get('/test', (req, res) => {
-  res.json({ message: "Server is up and running smoothly!" });
-});
-
-app.get('/', (req, res) => {
-  res.send('Backend Working');
-});
-
-// Database Connection & Server Startup
+// =========================================================
+// 🗄️ DATABASE CONNECTION & SERVER STARTUP
+// =========================================================
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 

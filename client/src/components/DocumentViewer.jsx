@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 
-export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocContext, onReset }) {
+export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocContext, currentUserEmail, onReset }) {
+
   const containerRef = useRef(null);
   const [coords, setCoords] = useState({ x: 50, y: 50 });
   const [pageNumber, setPageNumber] = useState(1);

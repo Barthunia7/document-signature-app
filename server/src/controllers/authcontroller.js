@@ -4,6 +4,22 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto'); // ✅ Added for generating secure tokens
 const nodemailer = require('nodemailer'); // ✅ Added for dispatching password links
 
+// =========================================================
+// 📧 LIVE PRODUCTION SMTP TRANSPORTER (INSTANTIATED ONCE)
+// =========================================================
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || '://resend.com', // ✅ Fallback to Resend if not defined
+  port: parseInt(process.env.EMAIL_PORT) || 465,
+  secure: true, // true for port 465
+  auth: {
+    user: process.env.EMAIL_USER, // Your verified SMTP username (e.g., 'resend')
+    pass: process.env.EMAIL_APP_PASS // Your live production API secret key
+  }
+});
+
+// =========================================================
+// 🚀 REGISTER CONTROLLER
+// =========================================================
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -22,6 +38,9 @@ exports.register = async (req, res) => {
   }
 };
 
+// =========================================================
+// 🚀 LOGIN CONTROLLER
+// =========================================================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -38,7 +57,9 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ DAY 14: ADDED FORGOT PASSWORD CONTROLLER IMPLEMENTATION
+// =========================================================
+// 🚀 DAY 14: FORGOT PASSWORD CONTROLLER IMPLEMENTATION
+// =========================================================
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -62,21 +83,12 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
     await user.save();
 
-    // 4. Configure Nodemailer secure communication submission channel (Port 587)
-    const transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.ETHEREAL_USER || 'mock_user',
-        pass: process.env.ETHEREAL_PASS || 'mock_pass'
-      }
-    });
-
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    // 4. Formulate absolute link targeting Vite frontend app domain dynamically
+    const frontendDomain = process.env.FRONTEND_URL || 'http://localhost:5173'; // ✅ DYNAMIC URL
+    const resetUrl = `${frontendDomain}/reset-password/${resetToken}`;
 
     const mailOptions = {
-      from: '"DocuSign Clone App Auth" <security@docusignclone.com>',
+      from: `"DocuSign Clone Security" <${process.env.EMAIL_FROM || 'security@docusignclone.com'}>`, // ✅ Uses fallback safely
       to: user.email,
       subject: 'Account Security: Password Reset Link Request',
       html: `
@@ -85,7 +97,7 @@ exports.forgotPassword = async (req, res) => {
           <p style="color: #475569; font-size: 14px; line-height: 1.6;">A request was initiated to change your account login credentials.</p>
           <p style="color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">Click the button below to update your security parameters:</p>
           <div style="text-align: center; margin-bottom: 24px;">
-            <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Reset Account Password</a>
+            <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Reset Account Password</a>
           </div>
           <p style="margin-top: 20px; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px; text-align: center;">This link will expire in 1 hour.</p>
         </div>
@@ -98,5 +110,45 @@ exports.forgotPassword = async (req, res) => {
   } catch (error) {
     console.error("Forgot Password Controller Error:", error.message);
     return res.status(500).json({ error: "Internal server error processing security tokens." });
+  }
+};
+
+// =========================================================
+// 🚀 DAY 14: RESET PASSWORD VERIFICATION & UPDATE CONTROLLER
+// =========================================================
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: "New password parameter is required" });
+    }
+
+    // 1. Find user with matching token and verify token expiration timestamp is still valid
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() } // $gt means "greater than current time"
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+    }
+
+    // 2. Hash the new password securely
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 3. Apply updates and completely wipe out the reset token fields
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: "Password updated successfully! Redirecting to login..." });
+
+  } catch (error) {
+    console.error("Reset Password Controller Error:", error.message);
+    return res.status(500).json({ error: "Internal server error updating account password parameters." });
   }
 };

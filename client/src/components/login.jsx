@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // ✅ Added Visibility State
+  const [showPassword, setShowPassword] = useState(false); // Tracks visibility state
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -46,12 +46,12 @@ const Login = () => {
           />
         </div>
 
-        {/* ✅ UPDATED: Password Layout with Inline Visibility Toggle Button */}
+        {/* Password Layout with Inline Visibility Toggle Button */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ fontWeight: 'bold', color: '#475569', fontSize: '14px' }}>Password:</label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '5px' }}>
             <input 
-              type={showPassword ? "text" : "password"} // 👈 Dynamically swaps input type
+              type={showPassword ? "text" : "password"} // Dynamically swaps input type
               name="password" 
               value={formData.password}
               onChange={handleChange} 
@@ -77,7 +77,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* ✅ ADDED: Navigation Link for Forgot Password Requests */}
+        {/* Link for Forgot Password Routing requests */}
         <div style={{ textAlign: 'right', marginTop: '-10px', marginBottom: '22px' }}>
           <Link to="/forgot-password" style={{ fontSize: '13px', color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>
             Forgot Password?

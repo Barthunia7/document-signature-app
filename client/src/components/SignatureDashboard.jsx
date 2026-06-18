@@ -5,21 +5,32 @@ import DocumentViewer from './DocumentViewer';
 import SendRequestForm from './SendRequestForm';
 
 export default function SignatureDashboard() {
-    const [userSession, setUserSession] = useState(null); // ✅ Day 14 Session Tracker
+    const [userSession, setUserSession] = useState(null);
     const [activeDocument, setActiveDocument] = useState(null);
     const [signatureImage, setSignatureImage] = useState(null);
     const [pdfFileBase64, setPdfFileBase64] = useState(null);
     const [pdfName, setPdfName] = useState("");
     const [activeTab, setActiveTab] = useState('draw');
 
-    // ✅ Read active login parameters from your Day 6 Auth system on mount
-    useEffect(() => {
-        // Try standard auth storage key mappings
-        const storedUser = localStorage.getItem('user') || localStorage.getItem('email');
+    // ✅ FIXED: Natively defined signature vector data profile matrix
+    const savedSignatures = [
+        {
+            id: 1,
+            name: "Primary Initials",
+            url: "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='150' height='50'><text x='35' y='35' font-family='cursive' font-size='28' font-style='italic' fill='%23000'>J.D.</text></svg>"
+        },
+        {
+            id: 2,
+            name: "Full Legal Signature",
+            url: "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='150' height='50'><text x='15' y='35' font-family='cursive' font-size='26' font-style='italic' fill='%23000'>John Doe</text></svg>"
+        }
+    ];
 
+    // Load active authenticated account parameters on mount
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user') || localStorage.getItem('email');
         if (storedUser) {
             try {
-                // Parse if it's stored as a JSON object, otherwise read as raw string string
                 const parsed = storedUser.startsWith('{') ? JSON.parse(storedUser) : { email: storedUser };
                 setUserSession(parsed);
             } catch (e) {
@@ -53,7 +64,7 @@ export default function SignatureDashboard() {
         reader.readAsDataURL(file);
     };
 
-    // 🛡️ SECURITY GUARD: If not logged in, prompt authentication block immediately
+    // Session Security Gate
     if (!userSession) {
         return (
             <div style={{ textAlign: 'center', padding: '100px 20px', fontFamily: 'sans-serif' }}>
@@ -73,55 +84,18 @@ export default function SignatureDashboard() {
         <div style={{ padding: '30px', backgroundColor: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif' }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
 
-                {/* ✅ UPDATED SESSION IDENTITY STRIP WITH LOGOUT TRIGGERS */}
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px',
-                    padding: '10px 16px',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                }}>
-                    <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 'bold' }}>
-                        👤 Active User Session: <span style={{ color: '#0f172a' }}>{userSession.email || userSession}</span>
-                    </span>
-
+                {/* Active Session Identity Banner Row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '10px 16px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                    <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 'bold' }}>👤 Active User Session: <span style={{ color: '#0f172a' }}>{userSession.email || userSession}</span></span>
                     <button
-                        onClick={() => {
-                            // 1. Wipe all active browser login session keys
-                            localStorage.removeItem('user');
-                            localStorage.removeItem('email');
-                            localStorage.removeItem('token'); // Destroys custom token headers if present
-
-                            // 2. Clear component state variables instantly
-                            setUserSession(null);
-
-                            // 3. Smoothly redirect back out to Day 6 Login route interface
-                            window.location.href = '/login';
-                        }}
-                        style={{
-                            padding: '6px 14px',
-                            backgroundColor: '#fee2e2',
-                            color: '#ef4444',
-                            border: '1px solid #fca5a5',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fecaca'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                        onClick={() => { localStorage.removeItem('user'); localStorage.removeItem('email'); localStorage.removeItem('token'); setUserSession(null); window.location.href = '/login'; }}
+                        style={{ padding: '6px 14px', backgroundColor: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
                         🚪 Secure Logout
                     </button>
                 </div>
 
-
-                {/* PDF Document Upload Banner */}
+                {/* Local Machine Device Storage PDF Upload Banner */}
                 <div style={styles.pdfUploadBanner}>
                     <p style={{ margin: 0, fontWeight: 'bold', color: '#475569', fontSize: '14px' }}>
                         {pdfFileBase64 ? `📄 Active Target Custom PDF: ${pdfName}` : "📁 Step 1: Upload a PDF from your computer to sign:"}
@@ -185,7 +159,7 @@ export default function SignatureDashboard() {
                                     signatureSrc={signatureImage}
                                     customPdfSrc={pdfFileBase64}
                                     activeDocContext={activeDocument}
-                                    currentUserEmail={userSession.email || userSession} // ✅ Dynamic Session Injector Passed Down
+                                    currentUserEmail={userSession.email || userSession}
                                     onReset={() => setSignatureImage(null)}
                                 />
                             )}
@@ -197,7 +171,6 @@ export default function SignatureDashboard() {
     );
 }
 
-// Keep your existing styles block intact exactly as it is...
 const styles = {
     pdfUploadBanner: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '24px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' },
     inlinePdfPickerButton: { padding: '8px 16px', backgroundColor: '#0284c7', color: '#fff', fontSize: '13px', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer' },

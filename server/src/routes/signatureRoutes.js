@@ -1,36 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const { generateSignedPDF } = require('../services/pdfService');
+// Import brand new dedicated model cleanly
+const VaultSignature = require('../models/vaultSignature');
 
-router.post('/', async (req, res) => {
+// Endpoint 1: Save a newly hand-drawn signature straight into the user's collection vault
+router.post('/api/signatures/add', async (req, res) => {
   try {
-    const { fieldId, coordinates, signer, status, signatureImage } = req.body;
-
-    if (!fieldId || !coordinates || !signer) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const { userEmail, name, url } = req.body;
+    if (!userEmail || !url) {
+      return res.status(400).json({ error: "Missing mandatory account email or base64 image data parameters." });
     }
 
-    const templateName = 'ID_CARD.pdf'; 
-    let signedFilePath = null;
-
-    if (signatureImage) {
-      signedFilePath = await generateSignedPDF(
-        templateName, 
-        signatureImage, 
-        coordinates
-      );
-    }
-
-    return res.status(200).json({ 
-      success: true, 
-      filePath: signedFilePath 
+    const savedProfile = new VaultSignature({
+      userEmail: userEmail.toLowerCase().trim(),
+      name: name || `Saved Profile (${new Date().toLocaleDateString()})`,
+      url
     });
+
+    await savedProfile.save();
+    return res.status(201).json({ message: "Signature successfully pinned to your account vault!", data: savedProfile });
   } catch (error) {
-    console.error("❌ Route Error:", error.message);
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint 2: Fetch all matching signatures saved by the logged-in user account profile
+router.get('/api/signatures/vault/:userEmail', async (req, res) => {
+  try {
+    const email = req.params.userEmail.toLowerCase().trim();
+    const accountsDeck = await VaultSignature.find({ userEmail: email });
+    
+    return res.status(200).json(accountsDeck);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 });
 
