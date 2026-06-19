@@ -15,7 +15,7 @@ const app = express();
 // Dynamically handle allowed URLs from Render Environment Settings
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.FRONTEND_URL 
+  'https://vercel.app' //  actual stable domain
 ];
 
 app.use(cors({
@@ -23,12 +23,14 @@ app.use(cors({
     // Allow local development tools (Postman, curl, server-to-server)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    // Check if the domain matches our list OR ends with .vercel.app
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS policy configuration'));
     }
   },
+
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
