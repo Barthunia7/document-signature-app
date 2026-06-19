@@ -19,7 +19,9 @@ export default function DocumentSigner({ signatureImage }) {
         signatureImage: signatureImage
       };
 
-      const response = await fetch('http://localhost:5000/api/signatures', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/signatures`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -43,8 +45,8 @@ export default function DocumentSigner({ signatureImage }) {
   return (
     <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h3>Drag the signature exactly over the signing box</h3>
-      
-      <div 
+
+      <div
         id="pdf-container"
         style={{
           position: 'relative',

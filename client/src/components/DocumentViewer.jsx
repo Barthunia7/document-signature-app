@@ -10,7 +10,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
   // Extract dynamic values with smart defaults
   const DOCUMENT_ID = activeDocContext?.id || 'doc_default_101';
   const DOCUMENT_NAME = activeDocContext?.name || 'Document View';
-  const SIGNER_EMAIL =  currentUserEmail || 'guest@company.com';
+  const SIGNER_EMAIL = currentUserEmail || 'guest@company.com';
 
   const handleDragEnd = (e) => {
     if (!containerRef.current) return;
@@ -18,7 +18,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
     const dropX = e.clientX - rect.left;
     const dropY = e.clientY - rect.top;
 
-    const x = Math.max(0, Math.min(dropX - 75, rect.width - 150)); 
+    const x = Math.max(0, Math.min(dropX - 75, rect.width - 150));
     const y = Math.max(0, Math.min(dropY - 25, rect.height - 50));
     setCoords({ x, y });
   };
@@ -31,7 +31,10 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
 
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/status/reject', {
+
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/status/reject`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ documentId: DOCUMENT_ID, reason: reason })
@@ -40,7 +43,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
       if (!response.ok) throw new Error(data.error);
 
       alert(`Document Successfully Marked as Rejected.\nReason Saved: "${data.data.rejectionReason}"`);
-      onReset(); 
+      onReset();
     } catch (err) {
       alert(`Error processing rejection: ${err.message}`);
     } finally {
@@ -51,11 +54,13 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
   const handleFinalSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/sign-pdf', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/sign-pdf`, {
+
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'X-Document-Id': DOCUMENT_ID, 
+          'X-Document-Id': DOCUMENT_ID,
           'X-Signer-Email': SIGNER_EMAIL
         },
         body: JSON.stringify({
@@ -69,7 +74,8 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
 
       if (!response.ok) throw new Error('Failed to compile PDF layers');
 
-      await fetch('http://localhost:5000/api/status/sign', {
+      await fetch(`${API_URL}/api/status/sign`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ documentId: DOCUMENT_ID })
@@ -83,7 +89,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
       document.body.appendChild(downloadLink);
       downloadLink.click();
       downloadLink.remove();
-      
+
       alert("Document signed successfully! Your file has downloaded.");
       onReset();
     } catch (err) {
@@ -99,7 +105,7 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
       return (
         <div style={{ width: '100%', height: '100%', backgroundColor: '#f8fafc' }}>
           <iframe
-            src={customPdfSrc} 
+            src={customPdfSrc}
             title="Active PDF Core Preview Layer"
             style={{
               width: '100%',
@@ -172,11 +178,11 @@ export default function DocumentViewer({ signatureSrc, customPdfSrc, activeDocCo
         <div
           draggable="true"
           onDragEnd={handleDragEnd}
-          style={{ 
-            ...styles.draggableSignatureWrapper, 
-            left: `${coords.x}px`, 
+          style={{
+            ...styles.draggableSignatureWrapper,
+            left: `${coords.x}px`,
             top: `${coords.y}px`,
-            zIndex: 999 
+            zIndex: 999
           }}
         >
           <img src={signatureSrc} alt="Live Signature Layer" style={styles.signatureImageElement} />

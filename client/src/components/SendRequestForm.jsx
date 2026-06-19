@@ -6,7 +6,7 @@ export default function SendRequestForm() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-    const handleSendRequest = async (e) => {
+  const handleSendRequest = async (e) => {
     e.preventDefault();
     if (!email) return;
 
@@ -15,7 +15,8 @@ export default function SendRequestForm() {
 
     try {
       // 1. Existing Day 9 Pipeline: Generate Token and Dispatch Nodemailer Mail
-      const response = await fetch('http://localhost:5000/api/request-signature', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/request-signature`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ signerEmail: email, documentId: docId }),
@@ -25,12 +26,12 @@ export default function SendRequestForm() {
       if (!response.ok) throw new Error(data.error || 'Failed to dispatch request');
 
       // ✅ 2. Day 11 State Synchronization: Initialize status to "Pending" inside MongoDB permanently
-      await fetch('http://localhost:5000/api/status/init', {
+      await fetch(`${API_URL}/api/status/init`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          documentId: 'doc_kiran_training_2026', 
-          signerEmail: email 
+        body: JSON.stringify({
+          documentId: 'doc_kiran_training_2026',
+          signerEmail: email
         }),
       });
 
@@ -50,7 +51,7 @@ export default function SendRequestForm() {
     <div style={styles.formCard}>
       <h3 style={styles.cardHeading}>✉️ Dispatch Signature Request Link</h3>
       <p style={styles.subtext}>Send an authenticated tokenized link to a collaborator or client's email inbox.</p>
-      
+
       <form onSubmit={handleSendRequest} style={styles.formElement}>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Recipient Signer Email:</label>
@@ -64,7 +65,7 @@ export default function SendRequestForm() {
             disabled={loading}
           />
         </div>
-        
+
         <button type="submit" style={styles.submitBtn} disabled={loading}>
           {loading ? 'Generating Link & Dispatching Email...' : 'Send Secure Signature Link'}
         </button>

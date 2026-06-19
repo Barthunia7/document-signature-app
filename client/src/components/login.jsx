@@ -15,12 +15,14 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', formData);
-      
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_URL}/api/auth/login`, formData);
+
+
       // Save token and user details to localStorage
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      
+
       alert(`Welcome back, ${res.data.user.name}!`);
       navigate('/'); // Routes smoothly straight into your Signature Dashboard console
     } catch (err) {
@@ -32,17 +34,17 @@ const Login = () => {
     <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', fontFamily: 'sans-serif', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', backgroundColor: '#fff' }}>
       <h2 style={{ textAlign: 'center', color: '#1e293b', marginBottom: '20px' }}>Account Login</h2>
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-      
+
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ fontWeight: 'bold', color: '#475569', fontSize: '14px' }}>Email:</label>
-          <input 
-            type="email" 
-            name="email" 
+          <input
+            type="email"
+            name="email"
             value={formData.email}
-            onChange={handleChange} 
-            required 
-            style={{ width: '100%', padding: '10px', marginTop: '5px', boxSizing: 'border-box', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '14px', outline: 'none' }} 
+            onChange={handleChange}
+            required
+            style={{ width: '100%', padding: '10px', marginTop: '5px', boxSizing: 'border-box', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '14px', outline: 'none' }}
           />
         </div>
 
@@ -50,13 +52,13 @@ const Login = () => {
         <div style={{ marginBottom: '15px' }}>
           <label style={{ fontWeight: 'bold', color: '#475569', fontSize: '14px' }}>Password:</label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '5px' }}>
-            <input 
+            <input
               type={showPassword ? "text" : "password"} // Dynamically swaps input type
-              name="password" 
+              name="password"
               value={formData.password}
-              onChange={handleChange} 
-              required 
-              style={{ width: '100%', padding: '10px', paddingRight: '40px', boxSizing: 'border-box', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '14px', outline: 'none' }} 
+              onChange={handleChange}
+              required
+              style={{ width: '100%', padding: '10px', paddingRight: '40px', boxSizing: 'border-box', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '14px', outline: 'none' }}
             />
             <button
               type="button"
