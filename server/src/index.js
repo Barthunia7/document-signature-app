@@ -8,16 +8,33 @@ const path = require('path');
 
 // Initialize Express app
 const app = express();
-
 // =========================================================
 // 🌐 GLOBAL MIDDLEWARE & SECURITY CONFIGURATIONS
 // =========================================================
+
+// Dynamically handle allowed URLs from Render Environment Settings
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL 
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite frontend URL
+  origin: function (origin, callback) {
+    // Allow local development tools (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy configuration'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
-app.use(express.json({ limit: '10mb' })); // Handle large signature strings safely
+
+app.use(express.json({ limit: '10mb' }));
+
 
 // Log incoming requests for developer visibility
 app.use((req, res, next) => {
