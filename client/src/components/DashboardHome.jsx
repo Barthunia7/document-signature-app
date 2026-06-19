@@ -6,26 +6,32 @@ export default function DashboardHome({ onSelectDocument }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const docResponse = await fetch('http://localhost:5000/api/docs');
-                let docData = [];
+      useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        
+        
+       const docResponse = await fetch(`${API_URL}/api/docs`);
 
-                if (docResponse.ok) {
-                    docData = await docResponse.json();
-                } else {
-                    docData = [
-                        { id: "doc_kiran_training_2026", name: "Kiran Saini Summer Training Letter.pdf", type: "Letter" },
-                        { id: "doc_102", name: "Mutual Non-Disclosure Agreement.pdf", type: "Contract" },
-                        { id: "doc_103", name: "Commercial Office Rental Lease.pdf", type: "Agreement" }
-                    ];
-                }
+        let docData = [];
 
-                // ✅ UPDATED: Fetch real-time status details for ALL document registry entries
-                const enrichedDocs = await Promise.all(docData.map(async (doc) => {
-                    try {
-                        const statusRes = await fetch(`http://localhost:5000/api/status/${doc.id}`);
+        if (docResponse.ok) {
+          docData = await docResponse.json();
+        } else {
+          docData = [
+            { id: "doc_kiran_training_2026", name: "Kiran Saini Summer Training Letter.pdf", type: "Letter" },
+            { id: "doc_102", name: "Mutual Non-Disclosure Agreement.pdf", type: "Contract" },
+            { id: "doc_103", name: "Commercial Office Rental Lease.pdf", type: "Agreement" }
+          ];
+        }
+
+        // ✅ UPDATED: Fetch real-time status details for ALL document registry entries
+        const enrichedDocs = await Promise.all(docData.map(async (doc) => {
+          try {
+        
+            const statusRes = await fetch(`${API_URL}/api/status/${doc.id}`);
+
 
                         if (statusRes.ok) {
                             const statusData = await statusRes.json();
