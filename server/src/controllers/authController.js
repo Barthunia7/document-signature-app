@@ -69,7 +69,7 @@ exports.forgotPassword = async (req, res) => {
 
     // 1. Verify if user exists in MongoDB
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    
+
     // Security Practice: Return a vague success message even if the user isn't found
     if (!user) {
       return res.status(200).json({ message: "If that account exists, a password reset link has been dispatched." });
@@ -77,7 +77,7 @@ exports.forgotPassword = async (req, res) => {
 
     // 2. Generate a unique random token
     const resetToken = crypto.randomBytes(20).toString('hex');
-    
+
     // 3. Save the token and 1-hour expiration timestamp onto the User document
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
@@ -88,7 +88,9 @@ exports.forgotPassword = async (req, res) => {
     const resetUrl = `${frontendDomain}/reset-password/${resetToken}`;
 
     const mailOptions = {
-      from: `"DocuSign Clone Security" <${process.env.EMAIL_FROM || 'security@docusignclone.com'}>`, // ✅ Uses fallback safely
+      
+      from: `"DocuSign Clone Security" <${process.env.EMAIL_USER}>`,
+
       to: user.email,
       subject: 'Account Security: Password Reset Link Request',
       html: `
